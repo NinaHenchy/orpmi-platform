@@ -5,13 +5,15 @@ Dark Navy Industrial Theme
 """
 
 import sys
+import os
 import subprocess
 from pathlib import Path
 
-# ── Path setup — absolute, works everywhere ───────────────────────────────
+# ── Absolute path setup ───────────────────────────────────────────────────
 _root = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(_root))
-sys.path.insert(0, "/app")  # Docker
+for _p in [str(_root), "/app"]:
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
 
 import streamlit as st
 
@@ -22,37 +24,43 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ── Auto-setup: runs on Streamlit Cloud, Docker, and local first run ──────
+# ── Auto-setup ────────────────────────────────────────────────────────────
 _db    = _root / "database" / "orpmi_dev.db"
 _model = _root / "models" / "artifacts" / "champion_model.pkl"
+_env   = {**os.environ, "PYTHONPATH": str(_root)}
+
+def _run(script: Path, label: str):
+    """Run a setup script. Shows error details if it fails."""
+    result = subprocess.run(
+        [sys.executable, str(script)],
+        cwd=str(_root),
+        env=_env,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        st.error(f"Setup failed — {label}")
+        st.code(result.stderr[-2000:] if result.stderr else result.stdout[-2000:])
+        st.stop()
 
 if not _db.exists():
     with st.spinner("First run — initialising database (~60 seconds)..."):
-        subprocess.run(
-            [sys.executable, str(_root / "scripts" / "setup_database.py")],
-            check=True, cwd=str(_root), env={**__import__('os').environ, "PYTHONPATH": str(_root)}
-        )
+        _run(_root / "scripts" / "setup_database.py", "database setup")
     st.rerun()
 
 if not _model.exists():
     with st.spinner("Training ML model (~30 seconds)..."):
-        subprocess.run(
-            [sys.executable, str(_root / "scripts" / "train_models.py")],
-            check=True, cwd=str(_root), env={**__import__('os').environ, "PYTHONPATH": str(_root)}
-        )
+        _run(_root / "scripts" / "train_models.py", "model training")
     st.rerun()
 
-# Auto-retrain if sklearn version mismatch
+# Auto-retrain if sklearn version changed
 try:
     import pickle
     with open(_model, "rb") as _f:
         pickle.load(_f)
 except Exception:
     with st.spinner("Updating ML model for current environment..."):
-        subprocess.run(
-            [sys.executable, str(_root / "scripts" / "train_models.py")],
-            check=True, cwd=str(_root), env={**__import__('os').environ, "PYTHONPATH": str(_root)}
-        )
+        _run(_root / "scripts" / "train_models.py", "model retraining")
     st.rerun()
 
 # ── UI ────────────────────────────────────────────────────────────────────
@@ -99,7 +107,7 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-# ── Page routing — all imports lazy ──────────────────────────────────────
+# ── Page routing ──────────────────────────────────────────────────────────
 if "Operations Overview" in page:
     from dashboards.pages.p1_operations_overview import render_operations_overview
     render_operations_overview()
