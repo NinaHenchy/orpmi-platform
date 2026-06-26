@@ -1,0 +1,11 @@
+pandas
+numpy
+scikit-learn
+streamlit
+plotly
+sqlalchemy
+python-dotenv
+loguru
+pytest
+openpyxl
+pyarrow

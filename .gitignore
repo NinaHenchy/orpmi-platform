@@ -1,0 +1,67 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.whl
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Environment files — NEVER commit secrets
+.env
+.env.local
+.env.production
+*.env
+
+# Database files — dev SQLite DB
+database/orpmi_dev.db
+database/*.db
+database/*.sqlite
+
+# Logs — runtime artifacts
+logs/
+*.log
+
+# Model artifacts
+models/*.pkl
+models/*.joblib
+models/*.json
+!models/.gitkeep
+
+# Data — raw and processed data not committed (large files)
+data/raw/
+data/processed/
+data/exports/
+!data/.gitkeep
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Test artifacts
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# Docker runtime
+.dockerenv
+
+# OS
+Thumbs.db

@@ -1,0 +1,25 @@
+version: "3.9"
+
+services:
+  orpmi-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: orpmi_platform
+    ports:
+      - "8502:8501"
+    environment:
+      - PYTHONPATH=/app
+    volumes:
+      - orpmi_db:/app/database
+      - orpmi_logs:/app/logs
+      - orpmi_models:/app/models
+    restart: unless-stopped
+
+volumes:
+  orpmi_db:
+    name: orpmi_database_vol
+  orpmi_logs:
+    name: orpmi_logs_vol
+  orpmi_models:
+    name: orpmi_models_vol
