@@ -47,10 +47,8 @@ if not _db.exists():
 if not _model.exists():
     with st.spinner("Training ML model (~30 seconds)..."):
         try:
-            from models.feature_engineering import build_full_feature_matrix
             from models.model_training import train_and_evaluate
-            df = build_full_feature_matrix()
-            train_and_evaluate(df)
+            train_and_evaluate()
         except Exception as e:
             st.error(f"Model training failed: {e}")
             st.exception(e)
@@ -64,10 +62,8 @@ try:
 except Exception:
     with st.spinner("Updating ML model for current environment..."):
         try:
-            from models.feature_engineering import build_full_feature_matrix
             from models.model_training import train_and_evaluate
-            df = build_full_feature_matrix()
-            train_and_evaluate(df)
+            train_and_evaluate()
         except Exception as e:
             st.error(f"Model retraining failed: {e}")
             st.exception(e)
