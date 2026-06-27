@@ -1,15 +1,13 @@
 """
 ORPMI Platform — Main Application Entry Point
-Works on: Local · Docker · Streamlit Cloud
-Dark Navy Industrial Theme
+Inline setup — no subprocess — works on Streamlit Cloud, Docker, Local
 """
 
 import sys
 import os
-import subprocess
 from pathlib import Path
 
-# ── Absolute path setup ───────────────────────────────────────────────────
+# ── Path setup ────────────────────────────────────────────────────────────
 _root = Path(__file__).resolve().parent.parent
 for _p in [str(_root), "/app"]:
     if _p not in sys.path:
@@ -26,51 +24,54 @@ st.set_page_config(
 
 _db    = _root / "database" / "orpmi_dev.db"
 _model = _root / "models" / "artifacts" / "champion_model.pkl"
-_env   = {**os.environ, "PYTHONPATH": str(_root)}
 
-def _run(script: Path, label: str):
-    result = subprocess.run(
-        [sys.executable, str(script)],
-        cwd=str(_root),
-        env=_env,
-        capture_output=True,
-        text=True,
-    )
-    if result.returncode != 0:
-        st.error(f"❌ Setup failed — {label}")
-        st.code(result.stderr[-3000:] if result.stderr else result.stdout[-3000:])
-        st.stop()
-
-# ── Step 1: Database must exist before anything else ─────────────────────
+# ── Inline setup — no subprocess ──────────────────────────────────────────
 if not _db.exists():
     with st.spinner("First run — initialising database (~60 seconds)..."):
-        _run(_root / "scripts" / "setup_database.py", "database setup")
+        try:
+            os.makedirs(str(_root / "database"), exist_ok=True)
+            os.makedirs(str(_root / "models" / "artifacts"), exist_ok=True)
+            os.makedirs(str(_root / "logs"), exist_ok=True)
+            os.makedirs(str(_root / "data" / "raw"), exist_ok=True)
+            os.makedirs(str(_root / "data" / "processed"), exist_ok=True)
+            from database.db_connection import initialize_database
+            initialize_database()
+            from etl.run_etl import run_etl_pipeline
+            run_etl_pipeline()
+        except Exception as e:
+            st.error(f"Database setup failed: {e}")
+            st.exception(e)
+            st.stop()
     st.rerun()
 
-# ── Step 2: Only train model after database is confirmed ready ────────────
 if not _model.exists():
-    try:
-        from sqlalchemy import text
-        from database.db_connection import get_engine
-        eng = get_engine()
-        with eng.connect() as conn:
-            conn.execute(text("SELECT COUNT(*) FROM asset_operating_data"))
-        with st.spinner("Training ML model (~30 seconds)..."):
-            _run(_root / "scripts" / "train_models.py", "model training")
-        st.rerun()
-    except Exception:
-        with st.spinner("Setting up database..."):
-            _run(_root / "scripts" / "setup_database.py", "database setup")
-        st.rerun()
+    with st.spinner("Training ML model (~30 seconds)..."):
+        try:
+            from models.feature_engineering import build_full_feature_matrix
+            from models.model_training import train_and_evaluate
+            df = build_full_feature_matrix()
+            train_and_evaluate(df)
+        except Exception as e:
+            st.error(f"Model training failed: {e}")
+            st.exception(e)
+            st.stop()
+    st.rerun()
 
-# ── Step 3: Auto-retrain if sklearn version changed ───────────────────────
 try:
     import pickle
     with open(_model, "rb") as _f:
         pickle.load(_f)
 except Exception:
     with st.spinner("Updating ML model for current environment..."):
-        _run(_root / "scripts" / "train_models.py", "model retraining")
+        try:
+            from models.feature_engineering import build_full_feature_matrix
+            from models.model_training import train_and_evaluate
+            df = build_full_feature_matrix()
+            train_and_evaluate(df)
+        except Exception as e:
+            st.error(f"Model retraining failed: {e}")
+            st.exception(e)
+            st.stop()
     st.rerun()
 
 # ── UI ────────────────────────────────────────────────────────────────────
@@ -80,7 +81,7 @@ inject_css()
 with st.sidebar:
     st.markdown("""
     <div style="padding:12px 0 8px 0;">
-        <div style="font-size:16px;font-weight:700;color:#e8edf5;letter-spacing:-0.3px;">
+        <div style="font-size:16px;font-weight:700;color:#e8edf5;">
             ⚙️ ORPMI Platform
         </div>
         <div style="font-size:11px;color:#4d6a85;margin-top:3px;">
@@ -90,22 +91,18 @@ with st.sidebar:
     """, unsafe_allow_html=True)
     st.markdown('<hr style="border-color:#1e3a5f;margin:6px 0 12px;">', unsafe_allow_html=True)
 
-    page = st.radio(
-        "nav",
-        options=[
-            "🏠  Operations Overview",
-            "📊  Reliability Scorecard",
-            "⏱️  Downtime Analysis",
-            "🔧  Maintenance Performance",
-            "⚡  Asset Health Monitor",
-            "🌡️  Sensor Trends",
-            "📋  Failure Analysis",
-            "🤖  Predictive Maintenance",
-            "🎯  Executive Intelligence",
-            "➕  Data Entry",
-        ],
-        label_visibility="collapsed",
-    )
+    page = st.radio("nav", options=[
+        "🏠  Operations Overview",
+        "📊  Reliability Scorecard",
+        "⏱️  Downtime Analysis",
+        "🔧  Maintenance Performance",
+        "⚡  Asset Health Monitor",
+        "🌡️  Sensor Trends",
+        "📋  Failure Analysis",
+        "🤖  Predictive Maintenance",
+        "🎯  Executive Intelligence",
+        "➕  Data Entry",
+    ], label_visibility="collapsed")
 
     st.markdown('<hr style="border-color:#1e3a5f;margin:12px 0 10px;">', unsafe_allow_html=True)
     st.markdown("""
