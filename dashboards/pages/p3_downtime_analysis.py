@@ -42,9 +42,9 @@ def render_downtime_analysis():
     # ── FINANCIAL SUMMARY METRICS ─────────────────────────────────────────
     section_header("Downtime Financial Impact — YTD Summary")
 
-    total_dt_hrs  = failures["downtime_hours"].sum()
+    total_dt_hrs   = failures["downtime_hours"].sum()
     total_prod_loss = failures["production_loss_bbls"].sum()
-    total_impact  = failures["financial_impact_usd"].sum()
+    total_impact   = failures["financial_impact_usd"].sum()
     critical_count = len(failures[failures["failure_severity"] == "Critical"])
     avg_ttr = failures["time_to_repair_hrs"].mean()
 
@@ -54,19 +54,18 @@ def render_downtime_analysis():
     with c3: st.metric("Production Loss", f"{total_prod_loss:,.0f} bbls")
     with c4: st.metric("Critical Failures", critical_count,
                        f"{critical_count/len(failures)*100:.0f}% of all events")
-    with c5: st.metric("Avg TTR", f"{avg_ttr:.1f} hrs",
-                       help="Mean Time to Repair — workforce effectiveness indicator")
+    with c5: st.metric("Avg TTR", f"{avg_ttr:.1f} hrs")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ── DOWNTIME BY ASSET + SEVERITY BREAKDOWN ────────────────────────────
+    # ── DOWNTIME BY ASSET + FINANCIAL IMPACT ─────────────────────────────
     col_left, col_right = st.columns(2)
 
     with col_left:
         section_header("Downtime Hours by Asset")
-        dt_by_asset = failures.groupby(["asset_id","asset_name"]).agg(
-            total_downtime=("downtime_hours","sum"),
-            events=("id","count"),
+        dt_by_asset = failures.groupby(["asset_id", "asset_name"]).agg(
+            total_downtime=("downtime_hours", "sum"),
+            events=("work_order_id", "count"),
         ).reset_index().sort_values("total_downtime", ascending=True)
 
         fig_dt = go.Figure(go.Bar(
@@ -77,7 +76,7 @@ def render_downtime_analysis():
                           for aid in dt_by_asset["asset_id"]],
             text=[f"{v:.1f} hrs" for v in dt_by_asset["total_downtime"]],
             textposition="outside",
-            customdata=dt_by_asset[["events","asset_id"]].values,
+            customdata=dt_by_asset[["events", "asset_id"]].values,
             hovertemplate=(
                 "<b>%{y}</b><br>Downtime: %{x:.1f} hrs<br>"
                 "Events: %{customdata[0]}<extra></extra>"
@@ -89,7 +88,7 @@ def render_downtime_analysis():
             margin=dict(l=160, r=50, t=20, b=40),
             showlegend=False,
         )
-        st.plotly_chart(fig_dt, use_container_width=True, key="p3_downtime_analysis_chart_1")
+        st.plotly_chart(fig_dt, use_container_width=True, key="p3_chart_dt_asset")
 
     with col_right:
         section_header("Financial Impact by Asset")
@@ -119,7 +118,7 @@ def render_downtime_analysis():
                 margin=dict(l=160, r=80, t=20, b=40),
                 showlegend=False,
             )
-            st.plotly_chart(fig_fin, use_container_width=True, key="p3_downtime_analysis_chart_2")
+            st.plotly_chart(fig_fin, use_container_width=True, key="p3_chart_fin_asset")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -128,9 +127,9 @@ def render_downtime_analysis():
     monthly = get_failures_by_month()
     if not monthly.empty:
         monthly_agg = monthly.groupby("month").agg(
-            total_downtime=("total_downtime","sum"),
-            total_impact=("total_impact","sum"),
-            total_failures=("failures","sum"),
+            total_downtime=("total_downtime", "sum"),
+            total_impact=("total_impact", "sum"),
+            total_failures=("failures", "sum"),
         ).reset_index()
 
         fig_monthly = make_subplots(specs=[[{"secondary_y": True}]])
@@ -150,27 +149,29 @@ def render_downtime_analysis():
             marker=dict(size=7),
         ), secondary_y=True)
         apply_layout(fig_monthly, height=320)
-        fig_monthly.update_yaxes(title_text="Downtime Hours", secondary_y=False,
-                                 gridcolor=THEME["grid_color"],
-                                 tickfont=dict(size=10))
-        fig_monthly.update_yaxes(title_text="Financial Impact (USD)", secondary_y=True,
-                                 showgrid=False,
-                                 tickfont=dict(size=10, color=THEME["amber"]))
+        fig_monthly.update_yaxes(
+            title_text="Downtime Hours", secondary_y=False,
+            gridcolor=THEME["grid_color"], tickfont=dict(size=10)
+        )
+        fig_monthly.update_yaxes(
+            title_text="Financial Impact (USD)", secondary_y=True,
+            showgrid=False, tickfont=dict(size=10, color=THEME["amber"])
+        )
         fig_monthly.update_layout(
             legend=dict(orientation="h", y=1.1, x=0, font=dict(size=10)),
             margin=dict(l=60, r=70, t=30, b=50),
         )
-        st.plotly_chart(fig_monthly, use_container_width=True, key="p3_downtime_analysis_chart_3")
+        st.plotly_chart(fig_monthly, use_container_width=True, key="p3_chart_monthly")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ── SEVERITY DISTRIBUTION + DETECTION METHOD ──────────────────────────
+    # ── SEVERITY + CATEGORY ───────────────────────────────────────────────
     col_sev, col_det = st.columns(2)
 
     with col_sev:
         section_header("Failure Severity Distribution")
         sev_counts = failures["failure_severity"].value_counts()
-        sev_order = ["Critical","Major","Minor","Negligible"]
+        sev_order = ["Critical", "Major", "Minor", "Negligible"]
         sev_filtered = {k: sev_counts.get(k, 0) for k in sev_order if sev_counts.get(k, 0) > 0}
 
         fig_sev = go.Figure(go.Pie(
@@ -188,17 +189,19 @@ def render_downtime_analysis():
             legend=dict(orientation="h", y=-0.15, x=0.1, font=dict(size=10)),
             margin=dict(l=20, r=20, t=20, b=60),
         )
-        st.plotly_chart(fig_sev, use_container_width=True, key="p3_downtime_analysis_chart_4")
+        st.plotly_chart(fig_sev, use_container_width=True, key="p3_chart_severity")
 
     with col_det:
         section_header("Downtime by Failure Category")
         cat_dt = failures.groupby("failure_category").agg(
-            total_downtime=("downtime_hours","sum"),
-            count=("id","count"),
+            total_downtime=("downtime_hours", "sum"),
+            count=("work_order_id", "count"),
         ).reset_index().sort_values("total_downtime", ascending=False).head(8)
 
-        colors_cat = [THEME["blue"], THEME["red"], THEME["amber"], THEME["green"],
-                      THEME["purple"], THEME["cyan"], THEME["orange"], THEME["text_secondary"]]
+        colors_cat = [
+            THEME["blue"], THEME["red"], THEME["amber"], THEME["green"],
+            THEME["purple"], THEME["cyan"], THEME["orange"], THEME["text_secondary"]
+        ]
 
         fig_cat = go.Figure(go.Bar(
             x=cat_dt["failure_category"],
@@ -215,18 +218,22 @@ def render_downtime_analysis():
             showlegend=False,
             margin=dict(l=40, r=20, t=20, b=90),
         )
-        st.plotly_chart(fig_cat, use_container_width=True, key="p3_downtime_analysis_chart_5")
+        st.plotly_chart(fig_cat, use_container_width=True, key="p3_chart_category")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
     # ── FAILURE EVENT LOG ──────────────────────────────────────────────────
     section_header("Failure Event Register — Complete Log")
-    display_cols = ["failure_date","asset_id","asset_name","failure_category",
-                    "failure_severity","downtime_hours","time_to_repair_hrs",
-                    "financial_impact_usd","detection_method","root_cause"]
+    display_cols = [
+        "failure_date", "asset_id", "asset_name", "failure_category",
+        "failure_severity", "downtime_hours", "time_to_repair_hrs",
+        "financial_impact_usd", "detection_method", "root_cause"
+    ]
     log_df = failures[display_cols].copy()
-    log_df.columns = ["Date","Asset ID","Asset Name","Category","Severity",
-                      "Downtime hrs","TTR hrs","Financial Impact $","Detection","Root Cause"]
+    log_df.columns = [
+        "Date", "Asset ID", "Asset Name", "Category", "Severity",
+        "Downtime hrs", "TTR hrs", "Financial Impact $", "Detection", "Root Cause"
+    ]
     log_df["Financial Impact $"] = log_df["Financial Impact $"].apply(lambda x: f"${x:,.0f}")
     log_df["Root Cause"] = log_df["Root Cause"].str[:80] + "..."
     st.dataframe(log_df, use_container_width=True, hide_index=True, height=350)
