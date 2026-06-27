@@ -10,6 +10,8 @@
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker)](https://docker.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
+![Dashboard Preview](docs/screenshots/dashboard_preview.png)
+
 ---
 
 ## Platform Overview
