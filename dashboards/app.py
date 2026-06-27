@@ -24,13 +24,11 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ── Auto-setup ────────────────────────────────────────────────────────────
 _db    = _root / "database" / "orpmi_dev.db"
 _model = _root / "models" / "artifacts" / "champion_model.pkl"
 _env   = {**os.environ, "PYTHONPATH": str(_root)}
 
 def _run(script: Path, label: str):
-    """Run a setup script. Shows error details if it fails."""
     result = subprocess.run(
         [sys.executable, str(script)],
         cwd=str(_root),
@@ -39,21 +37,33 @@ def _run(script: Path, label: str):
         text=True,
     )
     if result.returncode != 0:
-        st.error(f"Setup failed — {label}")
-        st.code(result.stderr[-2000:] if result.stderr else result.stdout[-2000:])
+        st.error(f"❌ Setup failed — {label}")
+        st.code(result.stderr[-3000:] if result.stderr else result.stdout[-3000:])
         st.stop()
 
+# ── Step 1: Database must exist before anything else ─────────────────────
 if not _db.exists():
     with st.spinner("First run — initialising database (~60 seconds)..."):
         _run(_root / "scripts" / "setup_database.py", "database setup")
     st.rerun()
 
+# ── Step 2: Only train model after database is confirmed ready ────────────
 if not _model.exists():
-    with st.spinner("Training ML model (~30 seconds)..."):
-        _run(_root / "scripts" / "train_models.py", "model training")
-    st.rerun()
+    try:
+        from sqlalchemy import text
+        from database.db_connection import get_engine
+        eng = get_engine()
+        with eng.connect() as conn:
+            conn.execute(text("SELECT COUNT(*) FROM asset_operating_data"))
+        with st.spinner("Training ML model (~30 seconds)..."):
+            _run(_root / "scripts" / "train_models.py", "model training")
+        st.rerun()
+    except Exception:
+        with st.spinner("Setting up database..."):
+            _run(_root / "scripts" / "setup_database.py", "database setup")
+        st.rerun()
 
-# Auto-retrain if sklearn version changed
+# ── Step 3: Auto-retrain if sklearn version changed ───────────────────────
 try:
     import pickle
     with open(_model, "rb") as _f:
