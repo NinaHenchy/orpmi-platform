@@ -1,20 +1,40 @@
 # ORPMI Platform
-**Predicts equipment failure 30 days ahead — ISO 14224 aligned, 
-deployed on Docker and Streamlit Cloud.**
 
-🔗 [Live Demo](https://orpmi-platform-ninahenchy.streamlit.app/)
+## Operational Reliability & Predictive Maintenance Intelligence
 
-### Operational Reliability & Predictive Maintenance Intelligence
+**Predicts equipment failure 30 days ahead — ISO 14224 aligned, deployed on Docker and Streamlit Cloud.**
 
-> **Production-grade industrial analytics platform for Oil & Gas production facility operations, aligned to ISO 14224 reliability data standards.**
+🔗 **[Live Demo: orpmi-platform-ninahenchy.streamlit.app](https://orpmi-platform-ninahenchy.streamlit.app/)**
 
-[![Python 3.11](https://img.shields.io/badge/Python-3.11-blue?logo=python)](https://python.org)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.35-red?logo=streamlit)](https://streamlit.io)
+![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-1.35-FF4B4B?logo=streamlit&logoColor=white)
 [![SQLite](https://img.shields.io/badge/Database-SQLite-003B57?logo=sqlite&logoColor=white)](https://sqlite.org)
-[![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker)](https://docker.com)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)
+![Tests](https://img.shields.io/badge/Tests-76%2F76%20Passing-06d6a0?logo=pytest&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-gold)
 
-![Dashboard Preview](docs/screenshots/dashboard_preview.png)
+Production-grade industrial analytics platform for Oil & Gas production facility operations, aligned to ISO 14224 reliability data standards.
+
+---
+
+## Model Performance
+
+| Metric | Value | Notes |
+|---|---|---|
+| ROC-AUC | **0.9381** | Temporally validated — train Jan–Sep, test Oct–Dec |
+| Recall | 0.294 | Threshold set at 0.4 — optimised for PdM cost structure |
+| F1 Score | 0.454 | Balanced against false alarm rate |
+| Features | **80 engineered** | Vibration, temperature, pressure, efficiency, maintenance history |
+| Validation | **Temporal split** | No data leakage — mirrors production deployment reality |
+| Tests | **76 / 76 passing** | Full automated test suite |
+
+> **Why Recall 0.294?** In predictive maintenance, the cost of a missed failure (unplanned downtime) far exceeds the cost of a false alarm (unnecessary inspection). The decision threshold is set at 0.4 — a business decision, not a statistical one.
+
+---
+
+## Dashboard Preview
+
+![ORPMI Dashboard](docs/screenshots/dashboard_preview.png)
 
 ---
 
@@ -31,188 +51,147 @@ The ORPMI Platform transforms fragmented operational data into decision-ready in
 
 ---
 
-## Live Demo
+## Architecture
 
-🔗 **[Launch Platform →](https://orpmi-platform.streamlit.app)** *(Streamlit Cloud)*
-
----
-
-## Monitored Assets — OPC-Alpha Facility
-
-| Asset ID | Asset Name | Type | Criticality | Downtime Cost/hr |
-|---|---|---|---|---|
-| **P-101** | Crude Transfer Pump | Centrifugal Pump | 🔴 Critical | $18,500 |
-| **P-202** | Export Pump | Centrifugal Pump | 🔴 Critical | $24,000 |
-| **C-201** | Gas Compressor | Reciprocating Compressor | 🔴 Critical | $31,000 |
-| **TK-105** | Crude Storage Tank | Fixed Roof Tank | 🟡 High | $12,000 |
-| **HX-401** | Heat Exchanger | Shell & Tube | 🟡 High | $9,500 |
-| **V-301** | Three-Phase Separator | Pressure Vessel | 🔴 Critical | $28,000 |
-
----
-
-## Dashboard Pages
-
-| Page | Title | Key Visualisations |
-|---|---|---|
-| 1 | **Operations Overview** | Fleet KPIs, asset status table, monthly trend, risk matrix, financial impact |
-| 2 | **Reliability Scorecard** | MTBF/MTTR comparison, availability trend, reliability ranking |
-| 3 | **Downtime Analysis** | Downtime Pareto, monthly trend, severity distribution, event log |
-| 4 | **Maintenance Performance** | PM compliance, cost by type, work order register |
-| 5 | **Asset Health Monitor** | Health gauges, risk heatmap, priority matrix, inspection scores |
-| 6 | **Sensor Trends** | ISO 10816 vibration zones, temp/pressure trend, efficiency degradation |
-| 7 | **Failure Analysis** | Failure Pareto, bad actor register, timeline, RCFA log |
-| 8 | **Predictive Maintenance** | ML failure gauges, probability trend, feature importance, confusion matrix |
-| 9 | **Executive Intelligence** | Fleet radar, AI narratives, risk register, cost breakdown |
+```
+Data Entry (Streamlit Forms)
+        │
+        ▼
+  SQLite Database
+  (ISO 14224 schema · 7 tables · 29-point validation · 4,700+ records)
+        │
+        ▼
+   ETL Pipeline
+   (automated transforms · data quality checks · incremental loading)
+        │
+        ▼
+ Feature Engineering
+ (80 features · rolling stats 7/14/30d · MTBF trajectory · vibration slope · degradation rate)
+        │
+        ▼
+  Random Forest Model
+  (class_weight=balanced · threshold=0.4 · temporally validated)
+        │
+        ▼
+  10-Page Streamlit Dashboard
+  (asset health · failure probability · maintenance recommendations · KPIs · data entry)
+```
 
 ---
 
-## ML Model Performance
+## Platform Pages
 
-| Metric | Value | Benchmark |
-|---|---|---|
-| **ROC-AUC** | **0.9381** | Excellent ≥ 0.85 |
-| Recall | 0.294 | Failure capture rate |
-| F1 Score | 0.454 | Precision/recall balance |
-| Features | 80 engineered | Sensor + history + KPIs |
-| Train Period | Jan–Sep 2024 | Temporal split |
-| Test Period | Oct–Dec 2024 | No data leakage |
-
-**Top predictive signals:** vibration slope (14-day), vibration slope (30-day), vibration current — consistent with ISO 10816 reliability theory.
+| Page | Content |
+|---|---|
+| Executive Overview | Fleet-level KPIs — OEE, MTBF, MTTR, availability, downtime cost |
+| Asset Health Monitor | Real-time health scores and risk classification per asset |
+| Predictive Maintenance | 30-day failure probability gauges and trend charts |
+| Failure Analysis | Historical failure patterns by asset type and failure mode |
+| Maintenance Intelligence | Work order analytics and PM effectiveness tracking |
+| Reliability KPIs | MTBF, MTTR, OEE trends over time by asset and department |
+| Cost Analytics | Downtime cost tracking and maintenance cost breakdown |
+| Work Order Management | Open, in-progress, and completed work order pipeline |
+| ISO 14224 Explorer | Equipment taxonomy browser aligned to standard |
+| Data Entry | Live operational data input — writes directly to database |
 
 ---
 
-## Quick Start
+## Standards Alignment
+
+| Standard | Application |
+|---|---|
+| **ISO 14224** | Equipment taxonomy, failure mode classification, 7-table relational data model |
+| **ISO 10816** | Vibration severity zone classification (A/B/C/D) embedded in feature engineering |
+| **ISO 45001** | HSE management system context — see also HSEI and HSIP platforms |
+
+---
+
+## Assets Monitored
+
+6 critical asset types across the OPC-Alpha simulated offshore facility:
+
+**Pumps · Compressors · Heat Exchangers · Tanks · Vessels · Separators**
+
+---
+
+## Tech Stack
+
+```
+Python 3.11    Scikit-Learn    Pandas    NumPy
+SQLite         SQLAlchemy      Plotly    Streamlit
+Docker         Git             pytest
+```
+
+---
+
+## Run Locally
 
 ```bash
-# Clone repository
-git clone https://github.com/YOUR_USERNAME/orpmi-platform.git
+# Clone the repository
+git clone https://github.com/NinaHenchy/orpmi-platform
 cd orpmi-platform
 
-# Install dependencies
-python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
+# Run with Docker (recommended)
+docker-compose up --build
+# Open http://localhost:8502
+
+# Or run directly
 pip install -r requirements.txt
-
-# Initialise database and run ETL
-python scripts/setup_database.py
-
-# Train predictive maintenance model
-python scripts/train_models.py
-
-# Launch dashboard
 streamlit run dashboards/app.py
 ```
 
----
-
-## Docker Deployment
-
-```bash
-# Build and run
-docker build -t orpmi-platform:latest .
-docker-compose up -d
-
-# Access at http://localhost:8501
-```
+The platform initialises its own database and runs ETL automatically on first launch. No manual setup required.
 
 ---
 
 ## Project Structure
 
 ```
-orpmi/
-├── config/                      # Platform and asset configuration
-│   └── settings.py              # Asset registry, KPI thresholds, facility params
-├── data/
-│   ├── raw/                     # Source data (gitignored)
-│   ├── processed/               # ETL output CSVs + ML feature matrix
-│   └── exports/                 # Dashboard exports
-├── database/
-│   ├── schemas/orpmi_schema.sql # 7-table DDL (ISO 14224 aligned)
-│   └── db_connection.py         # SQLite/PostgreSQL connection manager
-├── etl/
-│   ├── extractors/              # Synthetic industrial data generator
-│   ├── validators/              # 29-check data validation framework
-│   ├── loaders/                 # Database write operations
-│   └── run_etl.py               # Master ETL orchestrator
-├── models/
-│   ├── feature_engineering.py  # 5-group, 80-feature engineering pipeline
-│   ├── model_training.py        # RF + GB, calibration, temporal CV, evaluation
-│   ├── risk_scoring_engine.py   # Production inference + recommendation engine
-│   └── artifacts/               # Trained model + metadata (gitignored)
+orpmi-platform/
 ├── dashboards/
-│   ├── app.py                   # Streamlit entry point + navigation
-│   ├── data_access.py           # Centralised SQL query layer (16 functions)
-│   ├── components/              # Dark theme + Plotly engine
-│   └── pages/                   # 9 dashboard page modules
-├── tests/                       # Unit and integration tests
-├── docs/                        # Technical documentation
-├── scripts/
-│   ├── setup_database.py        # One-command database setup
-│   └── train_models.py          # One-command ML pipeline
-├── .github/workflows/           # GitHub Actions CI
-├── Dockerfile                   # Production container
-└── docker-compose.yml           # Multi-container orchestration
+│   ├── app.py                    # Main Streamlit application
+│   ├── components/               # Reusable UI components and theme
+│   └── pages/                    # Individual dashboard pages (p1–p10)
+├── database/
+│   ├── schemas/                  # ISO 14224-aligned SQL schema
+│   └── db_connection.py          # Database connection management
+├── etl/
+│   ├── extractors/               # Synthetic data generation
+│   └── loaders/                  # Database loading pipeline
+├── models/
+│   ├── predictor.py              # Random Forest training and inference
+│   └── artifacts/                # Serialised model files (.pkl)
+├── tests/                        # 76 automated tests
+├── scripts/                      # Setup and training scripts
+├── requirements.txt
+└── docker-compose.yml
 ```
 
 ---
 
-## Technology Stack
+## Live Demo
 
-| Layer | Technology |
-|---|---|
-| **Language** | Python 3.11 |
-| **Database** | SQLite (dev) · PostgreSQL (prod) |
-| **ETL** | Pandas · SQLAlchemy · Custom validation framework |
-| **ML** | Scikit-Learn · CalibratedClassifierCV · Isotonic calibration |
-| **Dashboard** | Streamlit 1.35 · Plotly 5.22 |
-| **Deployment** | Docker · Streamlit Cloud |
-| **CI/CD** | GitHub Actions |
-| **Standard** | ISO 14224 · ISO 10816 |
+🔗 **[orpmi-platform-ninahenchy.streamlit.app](https://orpmi-platform-ninahenchy.streamlit.app/)**
+
+The platform initialises its database and runs ETL automatically on first load. Allow up to 60 seconds on first visit for the database to populate.
 
 ---
 
-## Industrial Relevance
+## Related Platforms — OPC-Alpha Analytics Suite
 
-This platform demonstrates:
+All three platforms run on the same simulated offshore production facility (OPC-Alpha) and share a consistent data architecture.
 
-- **Asset Performance Management (APM)** — health scoring, criticality ranking, KPI tracking
-- **Reliability Centred Maintenance (RCM)** — MTBF/MTTR analysis, failure mode taxonomy
-- **Predictive Maintenance (PdM)** — ML failure probability, leading indicator monitoring
-- **Risk-Based Inspection (RBI)** — corrosion rates, inspection scoring, fitness-for-service
-- **Operational Excellence** — maintenance compliance, downtime cost, PM scheduling
-- **Executive Reporting** — fleet KPIs, financial impact, AI-generated narratives
+| Platform | Focus | Standards | Tests | Live Demo |
+|---|---|---|---|---|
+| **[HSEI](https://github.com/NinaHenchy/hsei-platform)** | HSE Incident Analytics & Process Safety Intelligence | API RP 754 · ISO 45001 · NUPRC · NOSDRA | 29 ✅ | [Launch](https://hsei-platform-ninahenchy.streamlit.app/) |
+| **[HSIP](https://github.com/NinaHenchy/hsip-platform)** | Safety Culture & LTI Prediction | ISO 45001 · Safety Culture Index (SCI) | 19 ✅ | [Launch](https://hsip-platform-ninahenchy.streamlit.app/) |
 
 ---
 
-## Business Value
+## Author
 
-| Outcome | Mechanism |
-|---|---|
-| Reduce unplanned downtime | 30-day failure probability alerts enable proactive intervention |
-| Improve maintenance planning | Risk-based priority scores replace subjective work order scheduling |
-| Financial impact visibility | Per-asset downtime cost tracking ($9,500–$31,000/hr) |
-| Maintenance compliance | PM schedule adherence monitoring with overdue flagging |
-| Executive decision support | Fleet radar, AI narratives, risk register in one view |
+**Nnenna Henchard** — Reliability Data Scientist · 15 years O&G Operations & HSE
 
----
-
-## Release History
-
-| Release | Title | Key Deliverables |
-|---|---|---|
-| **v1.0** | Industrial Data Foundation | 7-table schema, ETL pipeline, 29-check validation, KPI engine |
-| **v2.0** | Reliability Analytics Dashboard | 7-page Streamlit dashboard, dark industrial theme |
-| **v3.0** | Predictive Maintenance Intelligence | ML model (ROC-AUC 0.9381), risk scoring, AI narratives |
-| **v4.0** | Executive Operations Platform | Test suite, production docs, Docker CI/CD, full release |
-
----
-
-## License
-
-MIT License — see [LICENSE](LICENSE)
-
----
-
-*ORPMI Platform — Built for industrial operations professionals transitioning into analytics.*
-*Demonstrates practical operational intelligence capability for Oil & Gas, Energy, and Industrial sectors.*
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-nnenna--henchard-0077B5?logo=linkedin&logoColor=white)](https://linkedin.com/in/nnenna-henchard)
+[![Portfolio](https://img.shields.io/badge/Portfolio-ninahenchy.github.io-0a1628?logo=github&logoColor=white)](https://ninahenchy.github.io)
+[![Email](https://img.shields.io/badge/Email-ninahenchard%40gmail.com-D14836?logo=gmail&logoColor=white)](mailto:ninahenchard@gmail.com)
