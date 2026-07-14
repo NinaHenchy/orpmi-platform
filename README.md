@@ -1,12 +1,16 @@
 # ORPMI Platform
+**Predicts equipment failure 30 days ahead — ISO 14224 aligned, 
+deployed on Docker and Streamlit Cloud.**
+
+🔗 [Live Demo](https://orpmi-platform-ninahenchy.streamlit.app/)
+
 ### Operational Reliability & Predictive Maintenance Intelligence
 
-> **Production-grade industrial analytics platform for Oil & Gas production facility operations.**
-> Designed to the operational standard of Shell, Chevron, ExxonMobil, TotalEnergies, Seplat Energy, NNPC, SLB, and Baker Hughes environments.
+> **Production-grade industrial analytics platform for Oil & Gas production facility operations, aligned to ISO 14224 reliability data standards.**
 
 [![Python 3.11](https://img.shields.io/badge/Python-3.11-blue?logo=python)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.35-red?logo=streamlit)](https://streamlit.io)
-[![SQLite](https://img.shields.io/badge/Database-SQLite%20%7C%20PostgreSQL-blue?logo=sqlite)](https://sqlite.org)
+[![SQLite](https://img.shields.io/badge/Database-SQLite-003B57?logo=sqlite&logoColor=white)](https://sqlite.org)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker)](https://docker.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
